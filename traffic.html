@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RAFA's Traffic Alert</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom, #001f3f, #0074D9);
+      color: white;
+      padding: 1em;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    form {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 1.5em;
+      border-radius: 10px;
+      margin-bottom: 2em;
+      box-shadow: 0 0 8px #00BFFF;
+    }
+    label {
+      display: block;
+      margin-top: 1em;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 0.75em;
+      margin-top: 0.5em;
+      border-radius: 5px;
+      border: none;
+    }
+    button, .back-button {
+      margin-top: 1em;
+      padding: 0.75em 1.5em;
+      background-color: #00BFFF;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 0 10px cyan;
+      display: inline-block;
+      text-decoration: none;
+    }
+    .laporan {
+      margin-top: 2em;
+    }
+    .laporan-item {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 1em;
+      margin-bottom: 1em;
+      border-radius: 10px;
+      box-shadow: 0 0 6px #00BFFF;
+    }
+  </style>
+</head>
+<body>
+  <h1>🚧 RAFA's Traffic Alert</h1>
+  <form id="laporForm">
+    <label for="jenis">Jenis Laporan</label>
+    <select id="jenis" name="jenis" required>
+      <option value="Banjir">Banjir</option>
+      <option value="Jalan Rusak">Jalan Berlubang/Rusak</option>
+      <option value="Kecelakaan">Kecelakaan</option>
+      <option value="Rintangan">Pohon Tumbang/Rintangan</option>
+      <option value="Kemacetan">Kemacetan</option>
+      <option value="Pekerjaan Jalan">Pekerjaan Jalan</option>
+      <option value="Lain-lain">Lain-lain</option>
+    </select>
+
+    <label for="deskripsi">Deskripsi</label>
+    <textarea id="deskripsi" name="deskripsi" rows="4" required></textarea>
+
+    <label for="lokasi">Lokasi</label>
+    <input type="text" id="lokasi" name="lokasi" required>
+
+    <label for="fotoUrl">Link Foto (opsional)</label>
+    <input type="url" id="fotoUrl" name="fotoUrl">
+
+    <button type="submit">Kirim Laporan</button>
+  </form>
+
+  <div class="laporan" id="laporanContainer">
+    <h2>Laporan Terbaru</h2>
+  </div>
+
+  <a href="index.html" class="back-button">⬅️ Kembali ke Beranda</a>
+
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzSe98-h5VHz2zi498MoV56XJjBUaEWQABv-6ztm6b_eFW2MV8ao3HJOlUyxNLqHpf69g/exec";
+
+    document.getElementById("laporForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const form = new FormData(e.target);
+
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: form
+      })
+      .then(response => {
+        if (!response.ok) throw new Error("Gagal mengirim");
+        alert("Laporan berhasil dikirim!");
+        document.getElementById("laporForm").reset();
+        loadLaporan();
+      })
+      .catch(error => alert("Gagal mengirim laporan"));
+    });
+
+    function loadLaporan() {
+      fetch(SCRIPT_URL + '?read=1')
+        .then(res => res.json())
+        .then(data => {
+          const container = document.getElementById("laporanContainer");
+          container.innerHTML = '<h2>Laporan Terbaru</h2>';
+          data.reverse().forEach(item => {
+            const box = document.createElement("div");
+            box.className = "laporan-item";
+            box.innerHTML = `
+              <strong>Jenis:</strong> ${item.jenis}<br>
+              <strong>Deskripsi:</strong> ${item.deskripsi}<br>
+              <strong>Lokasi:</strong> ${item.lokasi}<br>
+              ${item.fotourl ? `<img src="${item.fotourl}" alt="Foto" style="max-width:100%; margin-top:0.5em;">` : ""}
+              <br><small>${item.timestamp || ""}</small>
+            `;
+            container.appendChild(box);
+          });
+        });
+    }
+
+    window.onload = loadLaporan;
+  </script>
+</body>
+</html>
